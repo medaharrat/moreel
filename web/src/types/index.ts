@@ -93,6 +93,8 @@ export interface Transcript {
   video: VideoUrl;
   title?: string;
   durationSeconds: number;
+  /** True when the transcriber flagged parts of the audio as unclear, mostly non-speech, or otherwise low-confidence — a fluent-sounding line can still be a fabrication on near-silent audio (a well-documented Whisper failure mode), so this is surfaced rather than presenting the transcript as flatly authoritative. */
+  lowConfidence: boolean;
   segments: TranscriptSegment[];
   /**
    * Streams the video Moreel already downloaded to produce this transcript,

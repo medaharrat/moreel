@@ -74,6 +74,7 @@ function toTranscript(body: ApiTranscribeResponse, video: VideoUrl): Transcript 
     video,
     title: describeVideo(video),
     durationSeconds: body.durationSeconds,
+    lowConfidence: body.lowConfidence,
     segments: body.segments.map((segment) => ({
       id: segment.id,
       startSeconds: segment.start,

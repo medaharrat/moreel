@@ -175,6 +175,7 @@ export function buildTranscriptionService(
     ...(visionProvider ? { visionProvider } : {}),
     ...(embeddingProvider ? { embeddingProvider } : {}),
     ...(videoInteractionAnalyzer ? { videoInteractionAnalyzer } : {}),
+    ...(frameSampler ? { commandRunner: runner } : {}),
     videoStore,
   });
 }

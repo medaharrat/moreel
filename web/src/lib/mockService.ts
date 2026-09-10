@@ -35,6 +35,7 @@ function buildTranscript(video: VideoUrl): Transcript {
     video,
     title: describeVideo(video),
     durationSeconds,
+    lowConfidence: false,
     segments,
   };
 }

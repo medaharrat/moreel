@@ -46,6 +46,19 @@ describe('normalizeTranscript', () => {
     expect(transcript.lowConfidence).toBe(true);
   });
 
+  it('drops a hallucinated filler word on fully silent audio (real values from a live no-speech Reel)', () => {
+    // Captured directly from OpenAI's API on a silent 16s clip — Whisper
+    // fabricated "Oh" with a noSpeechProb that didn't clear the old 0.6
+    // combined-check bar despite a clearly poor avgLogProb. See
+    // DEFAULT_NO_SPEECH_THRESHOLD's doc comment in normalization.ts.
+    const raw: RawSegment[] = [{ start: 0, end: 2, text: ' Oh', avgLogProb: -0.8617808222770691, noSpeechProb: 0.4669032692909241 }];
+    const transcript = normalizeTranscript(raw, { language: 'en', durationSeconds: 16.11 });
+
+    expect(transcript.segments).toEqual([]);
+    expect(transcript.text).toBe('');
+    expect(transcript.lowConfidence).toBe(true);
+  });
+
   it('keeps real speech even with an elevated noSpeechProb, when avgLogProb shows it was confidently recognized', () => {
     // Reproduces a real failure: Whisper computes noSpeechProb once per
     // ~30s decode window, not per segment, so a window that opens with a
@@ -163,5 +176,59 @@ describe('normalizeTranscript', () => {
     const confidence = transcript.segments[0]?.confidence;
     expect(confidence).toBeGreaterThan(0);
     expect(confidence).toBeLessThanOrEqual(1);
+  });
+
+  it('unrolls a decoder-loop "sliding window" repeat into one coherent segment', () => {
+    // A real observed case: near the end of a short/silent clip, Whisper
+    // re-decodes the same moment several times, each repeating the tail of
+    // the previous segment before adding a little new content, all at
+    // overlapping timestamps.
+    const raw: RawSegment[] = [
+      { start: 6, end: 7, text: 'Sorry' },
+      { start: 13, end: 15.3, text: 'my video ends here Thank you for watching' },
+      { start: 15.0, end: 15.6, text: 'you for watching This is TimmyDeclan signing out hope you enjoyed it' },
+      { start: 15.1, end: 16, text: 'is TimmyDeclan signing out hope you enjoyed it BYE' },
+    ];
+
+    const transcript = normalizeTranscript(raw, { language: 'en', durationSeconds: 16 });
+
+    expect(transcript.segments).toHaveLength(2);
+    expect(transcript.segments[0]?.text).toBe('Sorry');
+    expect(transcript.segments[1]?.text).toBe(
+      'my video ends here Thank you for watching This is TimmyDeclan signing out hope you enjoyed it BYE',
+    );
+    expect(transcript.segments[1]?.end).toBe(16);
+    expect(transcript.lowConfidence).toBe(true);
+  });
+
+  it('does not merge a genuinely repeated phrase spoken again later, well-separated in time', () => {
+    const raw: RawSegment[] = [
+      { start: 0, end: 2, text: 'thank you for watching' },
+      { start: 40, end: 42, text: 'thank you for watching' },
+    ];
+
+    const transcript = normalizeTranscript(raw, { language: 'en', durationSeconds: 45 });
+
+    expect(transcript.segments).toHaveLength(2);
+    expect(transcript.segments.map((s) => s.text)).toEqual([
+      'thank you for watching',
+      'thank you for watching',
+    ]);
+  });
+
+  it('does not merge time-overlapping segments over a single coincidentally shared word', () => {
+    const raw: RawSegment[] = [
+      { start: 0, end: 3, text: 'I really like the food here' },
+      { start: 2, end: 4, text: 'here we go again' },
+    ];
+
+    const transcript = normalizeTranscript(raw, { language: 'en', durationSeconds: 4 });
+
+    // Segments overlap in time, but only "here" is shared (1 word) — below
+    // the minimum overlap, so both must survive untouched rather than
+    // getting spliced together over a coincidental match.
+    expect(transcript.segments).toHaveLength(2);
+    expect(transcript.segments[0]?.text).toBe('I really like the food here');
+    expect(transcript.segments[1]?.text).toBe('here we go again');
   });
 });

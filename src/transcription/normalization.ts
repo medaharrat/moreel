@@ -23,7 +23,18 @@ export interface NormalizeOptions {
   lowConfidenceLogProbThreshold?: number;
 }
 
-const DEFAULT_NO_SPEECH_THRESHOLD = 0.6;
+/**
+ * The bar for the *combined* check below, not a standalone drop — see
+ * `VERY_HIGH_NO_SPEECH_THRESHOLD` for that. Calibrated against real cases,
+ * most recently a fully-silent 16s Reel where Whisper hallucinated a
+ * one-word filler ("Oh", noSpeechProb 0.467, avgLogProb -0.86) that the
+ * previous bar of 0.6 missed entirely — confirmed via a direct raw API
+ * call, not guessed. Lowered to 0.45, just under that real value; the
+ * combined AND with a poor avgLogProb (see
+ * `ELEVATED_NO_SPEECH_LOGPROB_THRESHOLD`) is still what protects genuine
+ * quiet/uncertain speech at this noSpeechProb level, not this bar alone.
+ */
+const DEFAULT_NO_SPEECH_THRESHOLD = 0.45;
 const DEFAULT_LOW_CONFIDENCE_LOGPROB = -1.0;
 /**
  * `noSpeechProb` on its own is unreliable above this point: Whisper computes
@@ -38,11 +49,14 @@ const VERY_HIGH_NO_SPEECH_THRESHOLD = 0.9;
 /**
  * The avgLogProb bar for the *combined* check only — deliberately less
  * strict than `lowConfidenceLogProbThreshold` (which just flags, never
- * drops). Calibrated against two real cases: a genuine hallucination
- * (noSpeechProb 0.88, avgLogProb -0.9 — dropped) and real coherent speech
+ * drops). Calibrated against three real cases: a genuine hallucination
+ * (noSpeechProb 0.88, avgLogProb -0.9 — dropped), real coherent speech
  * misflagged by a shared window-level noSpeechProb (noSpeechProb 0.77,
- * avgLogProb -0.25 — kept). Confident real speech rarely scores worse than
- * this even when noSpeechProb is elevated for unrelated reasons.
+ * avgLogProb -0.25 — kept), and a hallucinated filler word on silent audio
+ * (noSpeechProb 0.467, avgLogProb -0.86 — dropped, see
+ * `DEFAULT_NO_SPEECH_THRESHOLD`'s doc comment). Confident real speech
+ * rarely scores worse than this even when noSpeechProb is elevated for
+ * unrelated reasons.
  */
 const ELEVATED_NO_SPEECH_LOGPROB_THRESHOLD = -0.6;
 
@@ -133,7 +147,10 @@ export function normalizeTranscript(
     );
   }
 
-  const deduped = collapseRepeatedSegments(cleaned);
+  const unrolled = mergeSlidingRepeats(cleaned);
+  if (unrolled.merged) lowConfidence = true;
+
+  const deduped = collapseRepeatedSegments(unrolled.segments);
   if (deduped.collapsed) lowConfidence = true;
 
   const text = deduped.segments
@@ -162,6 +179,91 @@ function normalizeWhitespace(text: string): string {
 function logProbToConfidence(avgLogProb: number): number {
   // avg_logprob is typically in roughly [-3, 0]; map monotonically to [0, 1].
   return clamp(1 + avgLogProb / 3, 0, 1);
+}
+
+/** Below this many overlapping words, a shared word or two between adjacent segments is just coincidence, not a decoder loop — e.g. "it" or "the" recurring naturally. */
+const MIN_SLIDING_OVERLAP_WORDS = 2;
+
+function normalizeWordForCompare(word: string): string {
+  return word.toLowerCase().replace(/[^\p{L}\p{N}]/gu, '');
+}
+
+/**
+ * Finds the longest run where the END of `prevWords` exactly matches the
+ * START of `nextWords` (case/punctuation-insensitive) — a "sliding window"
+ * continuation, as opposed to `collapseRepeatedSegments`'s exact
+ * whole-segment match. Returns 0 when no such overlap reaches
+ * `MIN_SLIDING_OVERLAP_WORDS`.
+ */
+function findSlidingOverlap(prevWords: string[], nextWords: string[]): number {
+  const maxPossible = Math.min(prevWords.length, nextWords.length);
+  for (let overlap = maxPossible; overlap >= MIN_SLIDING_OVERLAP_WORDS; overlap--) {
+    let matches = true;
+    for (let i = 0; i < overlap; i++) {
+      const prevWord = normalizeWordForCompare(prevWords[prevWords.length - overlap + i]!);
+      const nextWord = normalizeWordForCompare(nextWords[i]!);
+      if (prevWord !== nextWord || prevWord.length === 0) {
+        matches = false;
+        break;
+      }
+    }
+    if (matches) return overlap;
+  }
+  return 0;
+}
+
+/**
+ * A distinct Whisper decoder-loop artifact from the one
+ * `collapseRepeatedSegments` handles: instead of repeating one segment
+ * verbatim, it re-decodes near the same point in the audio (typically
+ * right at the end of a short/silent clip) and produces several segments
+ * that each repeat the TAIL of the previous one before adding a little
+ * new content — e.g. "...thank you for watching" / "you for watching
+ * this is..." / "...this is TimmyDeclan signing out". Left alone, this
+ * renders as visibly overlapping, stuttering transcript lines. Detected
+ * by real word-sequence overlap between adjacent segments (never just
+ * "the same word appears twice") and merged into one segment that keeps
+ * each source's wording exactly once, in order — never rewritten, only
+ * de-duplicated.
+ */
+function mergeSlidingRepeats(segments: TranscriptSegment[]): {
+  segments: TranscriptSegment[];
+  merged: boolean;
+} {
+  if (segments.length === 0) return { segments, merged: false };
+
+  const result: TranscriptSegment[] = [{ ...segments[0]! }];
+  let mergedAny = false;
+
+  for (let i = 1; i < segments.length; i++) {
+    const prev = result[result.length - 1]!;
+    const current = segments[i]!;
+
+    const prevWords = prev.text.split(/\s+/).filter(Boolean);
+    const currentWords = current.text.split(/\s+/).filter(Boolean);
+    const overlap = findSlidingOverlap(prevWords, currentWords);
+
+    // A real decoder loop always overlaps in TIME too (two genuine,
+    // sequential utterances can never have segment N+1 start before
+    // segment N ends) — requiring that alongside the word-overlap keeps
+    // this from ever firing on a phrase someone legitimately repeats
+    // later, well-separated in time, elsewhere in the video.
+    const timeOverlaps = current.start < prev.end;
+
+    if (overlap > 0 && timeOverlaps) {
+      const newWords = currentWords.slice(overlap);
+      result[result.length - 1] = {
+        ...prev,
+        text: newWords.length > 0 ? `${prev.text} ${newWords.join(' ')}` : prev.text,
+        end: Math.max(prev.end, current.end),
+      };
+      mergedAny = true;
+    } else {
+      result.push({ ...current });
+    }
+  }
+
+  return { segments: result, merged: mergedAny };
 }
 
 function collapseRepeatedSegments(segments: TranscriptSegment[]): {

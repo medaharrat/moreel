@@ -8,6 +8,7 @@ import { transcriptToToolResult } from '../domain/transcript.js';
 import type { VisualObservation } from '../domain/vision.js';
 import type { AudioExtractor } from '../media/audio/audio-extractor.js';
 import type { FrameAsset, FrameSampler } from '../media/frames/frame-sampler.js';
+import { probeMediaDurationSeconds } from '../media/probe-duration.js';
 import { withRequestWorkspace } from '../media/workspace.js';
 import type { EmbeddingProvider } from '../embeddings/embedding-provider.js';
 import type { EmbeddingEntry } from '../domain/video.js';
@@ -33,6 +34,7 @@ import type { ProviderRegistry } from '../providers/provider.js';
 import { parseAndValidateUrl } from '../providers/url-validation.js';
 import type { Transcriber } from '../transcription/transcriber.js';
 import type { UsageRecorder } from '../usage/usage-recorder.js';
+import type { CommandRunner } from '../util/subprocess.js';
 import { Semaphore } from '../util/semaphore.js';
 import type { VisionProvider } from '../vision/vision-provider.js';
 
@@ -49,6 +51,8 @@ export interface TranscriptionServiceDeps {
   /** Absent (not just disabled) when VISION_ENABLED=false — see build-transcription-service.ts. */
   frameSampler?: FrameSampler;
   visionProvider?: VisionProvider;
+  /** Used as a best-effort fallback to probe a video's real duration via ffmpeg when the platform's own metadata doesn't report one — see probe-duration.ts. Absent (not just disabled) when VISION_ENABLED=false, since nothing needs it otherwise. */
+  commandRunner?: CommandRunner;
   /** Persists a queryable `VideoRecord` per processed video so `search_video`/`find_moment`/`get_video_timeline` can look it back up by id. Best-effort — a store failure never fails transcription. */
   videoStore?: VideoStore;
   /** Absent when SEARCH_EMBEDDINGS_ENABLED=false. When present, powers semantic search on top of lexical matching — best-effort, a failure here never fails transcription or falls back to anything worse than lexical-only search. */
@@ -233,6 +237,24 @@ export class TranscriptionService {
             !!this.deps.frameSampler &&
             !!this.deps.visionProvider &&
             request.includeVisual !== false;
+
+          // Some platforms' own metadata doesn't report a duration at all
+          // (confirmed in practice for at least some Instagram Reels via
+          // yt-dlp) — without it, adaptive sampling below silently falls
+          // back to the fixed configured interval, exactly defeating the
+          // point for the short/sparse videos it exists to help. A quick
+          // ffmpeg probe of the file we already downloaded fills that gap;
+          // skipped entirely when the platform already told us, or vision
+          // isn't running at all, so this never adds latency in the common
+          // case.
+          const effectiveVideoDuration =
+            visionActive && video.durationSeconds === undefined && this.deps.commandRunner
+              ? await probeMediaDurationSeconds(video.filePath, this.deps.commandRunner, config.ffmpegPath, {
+                  timeoutMs: Math.min(5_000, config.downloadTimeoutMs),
+                  signal: combinedSignal,
+                })
+              : video.durationSeconds;
+
           const [audio, frames] = await Promise.all([
             metrics.time('audio_extraction_ms', () =>
               this.deps.audioExtractor.extract(video, {
@@ -247,7 +269,11 @@ export class TranscriptionService {
                   .frameSampler!.sample(video, {
                     workDir,
                     maxFrames: config.maxFramesPerVideo,
-                    intervalSeconds: config.frameSampleIntervalSeconds,
+                    intervalSeconds: computeFrameSampleInterval(
+                      effectiveVideoDuration,
+                      config.frameSampleIntervalSeconds,
+                      config.maxFramesPerVideo,
+                    ),
                     timeoutMs: config.downloadTimeoutMs,
                     signal: combinedSignal,
                   })
@@ -284,8 +310,16 @@ export class TranscriptionService {
           if (visionActive && frames.length > 0) {
             const visionStart = performance.now();
             try {
+              // A low-confidence transcript is often outright fabricated
+              // (Whisper hallucinating on music/game audio/near-silence,
+              // not just uncertain) — feeding that text to the vision model
+              // as "what was said" can only mislead its judgment, never
+              // help it, on exactly the videos where vision matters most
+              // (little or no real speech). Omit it rather than pass known
+              // garbage as trusted context; the provider's own prompt
+              // already handles an empty transcript.
               const observations = await this.deps.visionProvider!.analyze(frames, {
-                transcriptText: transcript.text,
+                transcriptText: transcript.lowConfidence ? '' : transcript.text,
                 signal: combinedSignal,
                 timeoutMs: config.visionTimeoutMs,
               });
@@ -524,6 +558,32 @@ export class TranscriptionService {
       return undefined;
     }
   }
+}
+
+/** Below this many sampled frames, a short/action-heavy video is too sparsely covered for the vision model to reliably catch the notable moment — most of the clip's duration was never even sampled. */
+const MIN_FRAMES_FOR_DENSE_COVERAGE = 8;
+
+/**
+ * The configured `FRAME_SAMPLE_INTERVAL_SECONDS` is tuned for typical
+ * (30-60s+) videos; applied unchanged to a short clip, it can sample as
+ * few as 3-4 frames total, leaving most of the video's duration
+ * unobserved — if whatever's notable happens between samples, vision has
+ * nothing to work with, no matter how good the model is. Tightens the
+ * interval (never widens it) so a short video gets at least
+ * `MIN_FRAMES_FOR_DENSE_COVERAGE` samples, still bounded by the existing
+ * `maxFramesPerVideo` cap — cost is unaffected for normal-length videos,
+ * where the configured interval already clears this bar easily.
+ */
+export function computeFrameSampleInterval(
+  durationSeconds: number | undefined,
+  configuredIntervalSeconds: number,
+  maxFramesPerVideo: number,
+): number {
+  if (!durationSeconds || durationSeconds <= 0) return configuredIntervalSeconds;
+
+  const targetFrameCount = Math.min(maxFramesPerVideo, MIN_FRAMES_FOR_DENSE_COVERAGE);
+  const denseInterval = Math.floor(durationSeconds / targetFrameCount);
+  return Math.max(1, Math.min(configuredIntervalSeconds, denseInterval || 1));
 }
 
 function describeCause(cause: unknown): string | undefined {

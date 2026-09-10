@@ -26,9 +26,15 @@ const INCLUDE_VIDEO_MAP_STORAGE_KEY = 'moreel:includeVideoMap';
 
 function loadIncludeVisual(): boolean {
   try {
-    return localStorage.getItem(INCLUDE_VISUAL_STORAGE_KEY) === 'true';
+    // Defaults ON, not off: visual understanding is the actual product —
+    // a transcript alone can be nearly empty for a low-dialogue/silent
+    // video, which reads as "the tool just failed" when the one thing
+    // that would've described it never ran. Explicit "false" (the user
+    // turned it off) is the only thing that stays off.
+    const stored = localStorage.getItem(INCLUDE_VISUAL_STORAGE_KEY);
+    return stored === null ? true : stored === 'true';
   } catch {
-    return false;
+    return true;
   }
 }
 

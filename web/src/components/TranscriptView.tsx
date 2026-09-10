@@ -124,6 +124,13 @@ export function TranscriptView({
       transition={{ duration: 0.4, ease: 'easeOut', delay: 0.08 }}
       aria-label="Transcript"
     >
+      {transcript.lowConfidence && (
+        <p className="mb-5 text-[12px] leading-relaxed text-ink-faint italic">
+          Parts of this were unclear or mostly non-speech — treat the transcript below as
+          best-effort, not verbatim.
+        </p>
+      )}
+
       {paragraphs.map((p, idx) => {
         // Pure render-time association by timestamp range — paragraphs have
         // no stable identity of their own (they're recomputed on every

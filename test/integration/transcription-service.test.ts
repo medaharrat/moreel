@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 import type { VideoAsset } from '../../src/domain/transcript.js';
 import { ErrorCode, isMoreelError, MoreelError } from '../../src/domain/errors.js';
 import type { FrameAsset, FrameSampler } from '../../src/media/frames/frame-sampler.js';
+import type { Transcriber } from '../../src/transcription/transcriber.js';
 import type { VisionProvider } from '../../src/vision/vision-provider.js';
 import { buildTranscriptionService, FakeInstagramProvider } from '../helpers/service-fakes.js';
 
@@ -315,6 +316,39 @@ describe('TranscriptionService (integration)', () => {
         fakeFrames,
         expect.objectContaining({ transcriptText: '10 out of 10 unusual hobbies.' }),
       );
+    });
+
+    it('omits the transcript text from vision context when it is low-confidence (possibly fabricated)', async () => {
+      // A low-confidence transcript is often outright hallucinated (Whisper
+      // inventing words on music/game audio/near-silence), not just
+      // uncertain — passing that as trusted "what was said" context can
+      // only mislead the vision model's judgment, never help it.
+      const analyze = vi.fn(async () => []);
+      const unreliableTranscriber: Transcriber = {
+        provider: 'fake',
+        model: 'fake-model',
+        transcribe: async () => ({
+          text: 'Minecraft Qu cochie Or until 1924 Thanks for watching',
+          segments: [{ start: 7.84, end: 8.16, text: 'Minecraft Qu cochie Or until 1924 Thanks for watching' }],
+          language: 'en',
+          durationSeconds: 16.34,
+          lowConfidence: true,
+        }),
+      };
+      const { service } = buildTranscriptionService({
+        visionEnabled: true,
+        transcriber: unreliableTranscriber,
+        frameSampler: fakeFrameSampler(),
+        visionProvider: fakeVisionProvider(analyze),
+      });
+
+      await service.transcribeVideo({
+        url: 'https://www.instagram.com/reel/UnreliableTranscript/',
+        requestId: 'req-vision-unreliable',
+        signal: new AbortController().signal,
+      });
+
+      expect(analyze).toHaveBeenCalledWith(fakeFrames, expect.objectContaining({ transcriptText: '' }));
     });
 
     it('swallows a vision provider failure and still returns the spoken transcript', async () => {

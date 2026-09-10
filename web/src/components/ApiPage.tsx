@@ -69,16 +69,6 @@ export function ApiPage({ onBack, onNavigate }: ApiPageProps) {
           {SAMPLE_RESPONSE}
         </pre>
       </div>
-
-      <div className="mt-10 rounded-xl border border-line bg-surface px-5 py-5 text-center">
-        <p className="text-[13.5px] text-ink-soft">API access is in early access. Want a key?</p>
-        <a
-          href="mailto:hello@moreel.app?subject=API%20access%20request"
-          className="mt-2 inline-block text-[13.5px] font-medium text-ink underline decoration-line-strong underline-offset-2 hover:text-ink-soft"
-        >
-          Request access
-        </a>
-      </div>
     </StaticPageLayout>
   );
 }
