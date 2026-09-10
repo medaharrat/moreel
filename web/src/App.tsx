@@ -3,7 +3,6 @@ import { useCallback, useState, useRef, useEffect } from 'react';
 import { ApiPage } from './components/ApiPage';
 import { McpPage } from './components/McpPage';
 import { MoreelLogo } from './components/MoreelLogo';
-import { MorePage } from './components/MorePage';
 import { ScrollingTranscriptColumn } from './components/ScrollingTranscriptColumn';
 import { SourceHeader } from './components/SourceHeader';
 import { TopNav, type NavRoute } from './components/TopNav';
@@ -22,7 +21,7 @@ type Stage = 'idle' | 'processing' | 'result' | 'error';
 
 function routeFromPathname(pathname: string): NavRoute | null {
   const route = pathname.slice(1);
-  return route === 'api' || route === 'mcp' || route === 'more' ? route : null;
+  return route === 'api' || route === 'mcp' ? route : null;
 }
 
 // Mirrors the backend pipeline's real stages (download → extract audio →
@@ -167,9 +166,6 @@ function App() {
   }
   if (activeRoute === 'mcp') {
     return <McpPage onBack={closePage} onNavigate={navigateTo} />;
-  }
-  if (activeRoute === 'more') {
-    return <MorePage onBack={closePage} onNavigate={navigateTo} />;
   }
 
   if (isResult && transcript) {

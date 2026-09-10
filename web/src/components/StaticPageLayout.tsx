@@ -10,7 +10,7 @@ interface StaticPageLayoutProps {
   children: ReactNode;
 }
 
-/** Shared chrome for standalone pages (API/MCP/More) — header layout mirrors the transcript result page. */
+/** Shared chrome for standalone pages (API/MCP) — header layout mirrors the transcript result page. */
 export function StaticPageLayout({ onBack, onNavigate, title, subtitle, children }: StaticPageLayoutProps) {
   return (
     <div className="relative flex h-dvh w-full flex-col overflow-hidden">

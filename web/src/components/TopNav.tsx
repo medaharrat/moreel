@@ -1,4 +1,4 @@
-export type NavRoute = 'api' | 'mcp' | 'more';
+export type NavRoute = 'api' | 'mcp';
 
 interface TopNavProps {
   /** Intercepts nav links so App can swap in the matching page without a full reload. */
@@ -31,7 +31,6 @@ export function TopNav({ onNavigate }: TopNavProps) {
     <div className="flex items-center gap-5 text-[13px] text-ink-faint">
       {navLink('api', 'API', onNavigate)}
       {navLink('mcp', 'MCP', onNavigate)}
-      {navLink('more', 'More', onNavigate)}
     </div>
   );
 }
