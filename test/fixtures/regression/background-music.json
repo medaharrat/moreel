@@ -1,0 +1,14 @@
+{
+  "id": "background-music",
+  "description": "Spoken intro followed by an instrumental outro that a naive model mis-hears as lyrics; the non-speech section must be dropped rather than fabricated.",
+  "durationSeconds": 8.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 3.0, "text": "Here's how I organize my whole week.", "avgLogProb": -0.2, "noSpeechProb": 0.02 },
+    { "start": 3.0, "end": 8.0, "text": "Thanks for watching, don't forget to subscribe!", "avgLogProb": -0.9, "noSpeechProb": 0.88 }
+  ],
+  "expectedText": "Here's how I organize my whole week.",
+  "maxWer": 0.05,
+  "expectLowConfidence": true,
+  "expectEmpty": false
+}

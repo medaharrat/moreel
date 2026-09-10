@@ -1,0 +1,90 @@
+{
+  "name": "moreel",
+  "version": "0.1.0",
+  "description": "MCP server that transcribes public social-media videos, starting with Instagram Reels.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/medaharrat/moreel.git"
+  },
+  "homepage": "https://github.com/medaharrat/moreel#readme",
+  "bugs": {
+    "url": "https://github.com/medaharrat/moreel/issues"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "instagram",
+    "reels",
+    "transcription",
+    "whisper",
+    "video-transcript",
+    "ai-agents"
+  ],
+  "bin": {
+    "moreel": "./dist/mcp/server.js"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "dev": "tsx src/mcp/server.ts",
+    "start": "node dist/mcp/server.js",
+    "dev:http": "tsx --import ./src/observability/tracing-bootstrap.ts src/http/main.ts",
+    "start:http": "node --import ./dist/observability/tracing-bootstrap.js dist/http/main.js",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --max-warnings=0",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:unit": "vitest run test/unit",
+    "test:integration": "vitest run test/integration",
+    "test:protocol": "vitest run test/protocol",
+    "test:regression": "vitest run test/regression",
+    "test:failure": "vitest run test/failure",
+    "load-test": "tsx scripts/load-test.ts",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:transcription": "tsx scripts/benchmark-transcription.ts",
+    "audit": "npm audit --audit-level=high",
+    "migrate:up": "node-pg-migrate up",
+    "migrate:down": "node-pg-migrate down"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.3.0",
+    "@modelcontextprotocol/sdk": "^1.12.0",
+    "@node-rs/argon2": "^2.2.0",
+    "@opentelemetry/auto-instrumentations-node": "^0.80.0",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.222.0",
+    "@opentelemetry/resources": "^2.11.0",
+    "@opentelemetry/sdk-node": "^0.222.0",
+    "@opentelemetry/sdk-trace-node": "^2.11.0",
+    "@opentelemetry/semantic-conventions": "^1.43.0",
+    "@prometheus-io/client": "^0.16.1",
+    "@sentry/node": "^10.73.0",
+    "close-with-grace": "^2.5.0",
+    "fastify": "^5.12.1",
+    "ioredis": "^5.11.1",
+    "kysely": "^0.29.5",
+    "node-pg-migrate": "^9.0.0",
+    "pg": "^8.23.0",
+    "pino": "^9.5.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.23.1",
+    "@typescript-eslint/eslint-plugin": "^8.18.1",
+    "@typescript-eslint/parser": "^8.18.1",
+    "eslint": "^9.17.0",
+    "eslint-config-prettier": "^9.1.0",
+    "ioredis-mock": "^8.13.1",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^4.1.11"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "id": "longer-video",
+  "description": "A ~3 minute long-form Reel with many segments, exercising sustained accuracy and timestamp monotonicity over a longer transcript.",
+  "durationSeconds": 180.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 8.2, "text": "Welcome back to the channel, today we're doing a full pantry restock.", "avgLogProb": -0.18, "noSpeechProb": 0.02 },
+    { "start": 8.2, "end": 16.5, "text": "First up, we're gonna sort through everything that's expired.", "avgLogProb": -0.2, "noSpeechProb": 0.01 },
+    { "start": 16.5, "end": 25.0, "text": "It is genuinely shocking how much of this stuff I forgot I even had.", "avgLogProb": -0.22, "noSpeechProb": 0.01 },
+    { "start": 25.0, "end": 34.0, "text": "Okay, next we're grouping everything by category: grains, canned goods, spices.", "avgLogProb": -0.19, "noSpeechProb": 0.01 },
+    { "start": 34.0, "end": 45.0, "text": "This part always takes way longer than I think it will, every single time.", "avgLogProb": -0.21, "noSpeechProb": 0.02 },
+    { "start": 90.0, "end": 100.0, "text": "Alright, we're about halfway through and it's already looking so much better.", "avgLogProb": -0.2, "noSpeechProb": 0.01 },
+    { "start": 170.0, "end": 180.0, "text": "And that's the full restock, let me know in the comments what you'd add.", "avgLogProb": -0.17, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "Welcome back to the channel, today we're doing a full pantry restock. First up, we're gonna sort through everything that's expired. It is genuinely shocking how much of this stuff I forgot I even had. Okay, next we're grouping everything by category: grains, canned goods, spices. This part always takes way longer than I think it will, every single time. Alright, we're about halfway through and it's already looking so much better. And that's the full restock, let me know in the comments what you'd add.",
+  "maxWer": 0.05,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

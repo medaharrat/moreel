@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  otel-collector:
+    image: otel/opentelemetry-collector:latest
+    command: ["--config", "/etc/otel-collector-config.yaml"]
+    volumes:
+      - ./monitoring/otel-collector-config.yaml:/etc/otel-collector-config.yaml:ro
+    ports:
+      - "4318:4318" # OTLP HTTP
+      - "55681:55681"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    command: ["--config.file=/etc/prometheus/prometheus.yml"]
+    ports:
+      - "9090:9090"
+
+  grafana:
+    image: grafana/grafana:9.0.0
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+
+  loki:
+    image: grafana/loki:2.8.2
+    ports:
+      - "3100:3100"
+    command: -config.file=/etc/loki/local-config.yaml
+    volumes:
+      - ./monitoring/loki-config.yaml:/etc/loki/local-config.yaml:ro
+
+  jaeger:
+    image: jaegertracing/all-in-one:1.44
+    environment:
+      - COLLECTOR_OTLP_ENABLED=true
+    ports:
+      - "14268:14268"
+      - "16686:16686"
+      - "4317:4317" # OTLP gRPC — what otel-collector actually exports traces to
+
+volumes:
+  grafana_data:
+
+# Joins the app stack's network (docker-compose.prod.yml) so Prometheus can
+# actually reach `app:8080` — this file has no services of its own to scrape
+# otherwise. Requires the app stack to be up first.
+networks:
+  default:
+    name: moreel_default
+    external: true

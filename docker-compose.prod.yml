@@ -1,0 +1,101 @@
+# Local prod-like stack for manual testing — NOT what production actually
+# runs on. Production uses managed Postgres/Redis (see docs/deployment.md);
+# this compose file exists so you can exercise the full container +
+# Postgres + Redis wiring locally before deploying.
+services:
+  app:
+    build: .
+    ports:
+      - '8080:8080'
+    environment:
+      HTTP_PORT: '8080'
+      HTTP_HOST: '0.0.0.0'
+      DATABASE_URL: postgres://moreel:moreel@postgres:5432/moreel
+      REDIS_URL: redis://redis:6379
+      LOG_LEVEL: info
+      # The web container is served from a different origin than this API
+      # (localhost:3001, or an OrbStack *.orb.local domain, or whatever else
+      # a given local setup uses) — allow any origin here since this compose
+      # file is local-only tooling, never real production (see header).
+      CORS_ORIGIN: '*'
+      # Provide your own for local testing; never commit a real key.
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      # Opt-in vision pipeline (on-screen text/visual context alongside the
+      # spoken transcript) — off by default in every environment; set
+      # VISION_ENABLED=true in the shell before `docker compose up` to test it.
+      VISION_ENABLED: ${VISION_ENABLED:-false}
+      # Opt-in Video Map (resolves "this"/"that"/pointing references to a
+      # specific visual entity) — requires VISION_ENABLED=true too. Off by
+      # default; set VIDEO_MAP_ENABLED=true in the shell to test it.
+      VIDEO_MAP_ENABLED: ${VIDEO_MAP_ENABLED:-false}
+      # Points at docker-compose.observability.yml's collector (shared network,
+      # see that file's own header) — safe to leave set even when that stack
+      # isn't running: the OTLP exporter fails open (background retries, never
+      # blocks a request) rather than erroring the app.
+      OTEL_EXPORTER_OTLP_ENDPOINT: ${OTEL_EXPORTER_OTLP_ENDPOINT:-http://otel-collector:4318}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ['CMD', 'node', '-e', "fetch('http://127.0.0.1:8080/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    deploy:
+      resources:
+        limits:
+          cpus: '1'
+          memory: 512M
+
+  web:
+    build:
+      context: ./web
+      args:
+        # Defaults to plain localhost, matching this compose file's own
+        # `app` port mapping (8080:8080) — works with zero extra setup
+        # regardless of how Docker is run. If you're on OrbStack and load
+        # this app via its HTTPS <service>.<project>.orb.local domain
+        # instead of localhost, the browser will block a plain-HTTP
+        # localhost:8080 call as mixed content — export
+        # VITE_API_BASE_URL=https://app.moreel.orb.local before
+        # `docker compose up` in that case. Don't hardcode the orb.local
+        # domain here: it depends on OrbStack's own DNS resolution, which
+        # isn't guaranteed from every browser (e.g. Chrome's default
+        # Secure DNS bypasses it) — plain localhost has no such dependency.
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8080}
+    ports:
+      - '3001:80'
+    depends_on:
+      - app
+
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: moreel
+      POSTGRES_PASSWORD: moreel
+      POSTGRES_DB: moreel
+    ports:
+      - '5433:5432'
+    volumes:
+      - moreel_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U moreel']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - '6380:6379'
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  moreel_postgres_data:

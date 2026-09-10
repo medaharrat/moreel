@@ -1,0 +1,46 @@
+# Fly.io app config — staging. Deployed automatically on every merge to
+# main (see .github/workflows/main.yml); production requires a separate
+# manual-approval promotion. Smaller/cheaper than fly.toml on purpose —
+# staging validates correctness, not load capacity.
+app = 'moreel-staging'
+primary_region = 'ams'
+
+[build]
+
+[env]
+  HTTP_PORT = '8080'
+  HTTP_HOST = '0.0.0.0'
+  LOG_LEVEL = 'debug'
+  NODE_ENV = 'staging'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 1
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 25
+    soft_limit = 20
+
+[[http_service.checks]]
+  interval = '15s'
+  timeout = '3s'
+  grace_period = '10s'
+  method = 'GET'
+  path = '/ready'
+
+[checks]
+  [checks.health]
+    port = 8080
+    type = 'http'
+    interval = '15s'
+    timeout = '3s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
+
+[[vm]]
+  size = 'shared-cpu-1x'
+  memory = '512mb'

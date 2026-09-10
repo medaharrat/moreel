@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_call:
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: moreel
+          POSTGRES_PASSWORD: moreel
+          POSTGRES_DB: moreel_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U moreel"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+      redis:
+        image: redis:7-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgres://moreel:moreel@localhost:5432/moreel_test
+      REDIS_URL: redis://localhost:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Dependency audit
+        run: npm run audit
+
+      - name: Run migrations
+        run: npm run migrate:up
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Integration tests
+        run: npm run test:integration
+
+      - name: Protocol tests
+        run: npm run test:protocol
+
+      - name: Regression tests
+        run: npm run test:regression
+
+      - name: Failure/fault-injection tests
+        run: npm run test:failure
+
+      - name: Build
+        run: npm run build

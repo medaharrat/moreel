@@ -1,0 +1,17 @@
+{
+  "id": "fast-speech",
+  "description": "Rapid speech with short, densely packed segments (common in fast-paced Reels).",
+  "durationSeconds": 4.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 0.8, "text": "Okay so listen,", "avgLogProb": -0.3, "noSpeechProb": 0.01 },
+    { "start": 0.8, "end": 1.6, "text": "this one trick", "avgLogProb": -0.35, "noSpeechProb": 0.01 },
+    { "start": 1.6, "end": 2.4, "text": "saved me", "avgLogProb": -0.28, "noSpeechProb": 0.01 },
+    { "start": 2.4, "end": 3.2, "text": "so much time", "avgLogProb": -0.32, "noSpeechProb": 0.01 },
+    { "start": 3.2, "end": 4.0, "text": "every single day.", "avgLogProb": -0.25, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "Okay so listen, this one trick saved me so much time every single day.",
+  "maxWer": 0.08,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

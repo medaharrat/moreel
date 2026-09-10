@@ -1,0 +1,188 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --font-sans:
+    'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --color-paper: #fafaf8;
+  --color-ink: #1a1a18;
+  --color-ink-soft: #4a4a46;
+  --color-ink-faint: #8a8a84;
+  --color-line: #e4e3de;
+  --color-line-strong: #d2d1ca;
+  --color-surface: #ffffff;
+  --color-brand-from: #6d5bff;
+  --color-brand-to: #ff5b9b;
+}
+
+html {
+  color-scheme: light;
+  height: 100%;
+}
+
+/* The page itself never scrolls — only designated inner containers do
+   (see the transcript region in App.tsx). Keeps the whole thing feeling
+   like a fixed, weightless canvas rather than a document you scroll. */
+body {
+  height: 100%;
+  overflow: hidden;
+  background-color: var(--color-paper);
+  /* A precise dot grid, not a paper texture — the crisp, technical
+     background modern tools (Linear, Vercel, Raycast) actually use: a
+     deliberate geometric pattern, not noise standing in for material. */
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(26, 26, 24, 0.16) 1px, transparent 0),
+    radial-gradient(ellipse 55% 42% at 28% 0%, rgba(173, 148, 255, 0.16), transparent 65%),
+    radial-gradient(ellipse 50% 40% at 78% 6%, rgba(255, 158, 194, 0.14), transparent 65%),
+    radial-gradient(ellipse 60% 45% at 50% 0%, rgba(255, 210, 170, 0.08), transparent 70%);
+  background-repeat: repeat, no-repeat, no-repeat, no-repeat;
+  background-size: 22px 22px, auto, auto, auto;
+  background-attachment: fixed;
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+#root {
+  height: 100%;
+}
+
+::selection {
+  background-color: rgba(109, 91, 255, 0.18);
+  color: var(--color-ink);
+}
+
+/* Buttons/links only show a focus ring for real keyboard navigation — a
+   mouse click (or React Aria's hover-focuses-the-item menu behavior)
+   shouldn't leave a lingering outline behind, which is what the browser's
+   plain `:focus` (not `:focus-visible`) does by default. Scoped to
+   Tailwind's `base` layer so any component's own `outline-*` utility
+   class always wins, regardless of source order. */
+@layer base {
+  :where(button, a):focus {
+    outline: none;
+  }
+
+  :where(button, a):focus-visible {
+    outline: 2px solid rgba(109, 91, 255, 0.4);
+    outline-offset: 2px;
+  }
+}
+
+/* Slim custom scrubber for the video player's own control bar — the
+   browser-default range input is comparatively tall and heavy-handed. */
+.video-scrubber {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+}
+
+.video-scrubber::-webkit-slider-runnable-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-scrubber::-moz-range-track {
+  height: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-scrubber::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  width: 10px;
+  margin-top: -3.5px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.video-scrubber::-moz-range-thumb {
+  height: 10px;
+  width: 10px;
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+/* Same slim look as .video-scrubber, but rendered vertically for the
+   volume popover that appears above the mute button on hover. */
+.video-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  writing-mode: vertical-lr;
+  direction: rtl;
+}
+
+.video-volume-slider::-webkit-slider-runnable-track {
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-volume-slider::-moz-range-track {
+  width: 3px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.video-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 10px;
+  width: 10px;
+  margin-left: -3.5px;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+.video-volume-slider::-moz-range-thumb {
+  height: 10px;
+  width: 10px;
+  border: none;
+  border-radius: 999px;
+  background: #ffffff;
+}
+
+/* Thin, quiet scrollbar for the transcript's own scroll region — the
+   browser default is comparatively thick and draws attention to itself. */
+.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-line-strong) transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 6px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background-color: var(--color-line-strong);
+  border-radius: 999px;
+}
+
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-ink-faint);
+}
+
+/* Scrolls only as a safety net for content taller than its box (e.g. the
+   video column) — no visible scrollbar chrome for what's normally static. */
+.no-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}

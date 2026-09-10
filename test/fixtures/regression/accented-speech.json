@@ -1,0 +1,14 @@
+{
+  "id": "accented-speech",
+  "description": "Strong regional accent; recognizer confidence is slightly lower but words are correct.",
+  "durationSeconds": 5.2,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 2.6, "text": "Right, so today we're gonna talk about", "avgLogProb": -0.55, "noSpeechProb": 0.03 },
+    { "start": 2.6, "end": 5.2, "text": "how to properly season a cast iron pan.", "avgLogProb": -0.6, "noSpeechProb": 0.02 }
+  ],
+  "expectedText": "Right, so today we're gonna talk about how to properly season a cast iron pan.",
+  "maxWer": 0.1,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

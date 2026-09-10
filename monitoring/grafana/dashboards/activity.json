@@ -1,0 +1,91 @@
+{
+  "uid": "activity_overview",
+  "title": "Moreel — Activity",
+  "schemaVersion": 36,
+  "version": 2,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests/sec by route",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum(rate(requests_total[5m])) by (route)", "legendFormat": "{{route}}" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Active requests",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "targets": [{ "expr": "requests_active", "legendFormat": "in flight" }]
+    },
+    {
+      "type": "stat",
+      "title": "Transcription failures (1h)",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "targets": [
+        { "expr": "sum(increase(transcriptions_total{outcome=\"failure\"}[1h]))", "legendFormat": "failures" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache hit ratio (5m)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 4 },
+      "fieldConfig": { "defaults": { "unit": "percentunit" } },
+      "targets": [
+        {
+          "expr": "sum(rate(cache_hits_total[5m])) / clamp_min(sum(rate(cache_hits_total[5m])) + sum(rate(cache_misses_total[5m])), 1e-9)",
+          "legendFormat": "hit ratio"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transcription outcomes/sec",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "targets": [
+        { "expr": "sum(rate(transcriptions_total[5m])) by (outcome)", "legendFormat": "{{outcome}}" }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transcription latency (p50 / p95)",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(transcription_latency_ms_bucket[5m])) by (le))",
+          "legendFormat": "p50"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(transcription_latency_ms_bucket[5m])) by (le))",
+          "legendFormat": "p95"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider fetch latency (p95) by provider",
+      "gridPos": { "x": 0, "y": 16, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "ms" } },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(provider_latency_ms_bucket[5m])) by (le, provider))",
+          "legendFormat": "{{provider}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Provider circuit breaker transitions",
+      "gridPos": { "x": 12, "y": 16, "w": 12, "h": 8 },
+      "targets": [
+        {
+          "expr": "sum(increase(provider_circuit_breaker_transitions_total[5m])) by (provider, to_state)",
+          "legendFormat": "{{provider}} → {{to_state}}"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "time": { "from": "now-6h", "to": "now" }
+}

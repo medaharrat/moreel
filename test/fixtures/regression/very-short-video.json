@@ -1,0 +1,13 @@
+{
+  "id": "very-short-video",
+  "description": "A ~1.5 second clip with a single word — exercises the no-segments-returned fallback path.",
+  "durationSeconds": 1.5,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 1.5, "text": "Wow!", "avgLogProb": -0.18, "noSpeechProb": 0.03 }
+  ],
+  "expectedText": "Wow!",
+  "maxWer": 0,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

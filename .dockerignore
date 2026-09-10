@@ -1,0 +1,16 @@
+node_modules
+dist
+coverage
+.env
+.env.*
+!.env.example
+*.log
+.DS_Store
+tmp
+.moreel-cache
+benchmark-results
+test
+scripts
+.git
+.github
+.mcp.json

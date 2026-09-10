@@ -1,0 +1,46 @@
+# Fly.io app config — production. See docs/deployment.md for the full
+# setup runbook (Postgres/Redis provisioning, secrets, first deploy).
+app = 'moreel'
+primary_region = 'ams'
+
+[build]
+
+[env]
+  HTTP_PORT = '8080'
+  HTTP_HOST = '0.0.0.0'
+  LOG_LEVEL = 'info'
+  NODE_ENV = 'production'
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'off'
+  auto_start_machines = true
+  min_machines_running = 2
+  # Matches MAX_CONCURRENT_REQUESTS — Fly queues/rejects beyond this per
+  # machine rather than overloading a single instance.
+  [http_service.concurrency]
+    type = 'requests'
+    hard_limit = 25
+    soft_limit = 20
+
+[[http_service.checks]]
+  interval = '15s'
+  timeout = '3s'
+  grace_period = '10s'
+  method = 'GET'
+  path = '/ready'
+
+[checks]
+  [checks.health]
+    port = 8080
+    type = 'http'
+    interval = '15s'
+    timeout = '3s'
+    grace_period = '10s'
+    method = 'GET'
+    path = '/health'
+
+[[vm]]
+  size = 'shared-cpu-2x'
+  memory = '1gb'

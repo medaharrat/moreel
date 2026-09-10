@@ -1,0 +1,15 @@
+{
+  "id": "multiple-speakers",
+  "description": "Two speakers in quick back-and-forth dialogue (no diarization in v0.1 — text should still be captured in order).",
+  "durationSeconds": 7.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 1.8, "text": "Wait, you actually did that?", "avgLogProb": -0.22, "noSpeechProb": 0.01 },
+    { "start": 1.8, "end": 4.0, "text": "Yeah, I really did, and it worked.", "avgLogProb": -0.2, "noSpeechProb": 0.01 },
+    { "start": 4.0, "end": 7.0, "text": "No way, that's insane.", "avgLogProb": -0.25, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "Wait, you actually did that? Yeah, I really did, and it worked. No way, that's insane.",
+  "maxWer": 0.05,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

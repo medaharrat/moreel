@@ -1,0 +1,15 @@
+{
+  "id": "clear-english-speech",
+  "description": "Clear, single-speaker English speech with no background noise.",
+  "durationSeconds": 6.5,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 2.44, "text": "10 out of 10 unusual hobbies", "avgLogProb": -0.12, "noSpeechProb": 0.01 },
+    { "start": 2.44, "end": 4.9, "text": "you should try this year.", "avgLogProb": -0.15, "noSpeechProb": 0.02 },
+    { "start": 4.9, "end": 6.5, "text": "Number one: beekeeping.", "avgLogProb": -0.1, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "10 out of 10 unusual hobbies you should try this year. Number one: beekeeping.",
+  "maxWer": 0.05,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

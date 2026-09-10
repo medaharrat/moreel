@@ -1,0 +1,13 @@
+{
+  "id": "silence",
+  "description": "A silent video with no spoken content; must return an empty transcript rather than fabricating speech.",
+  "durationSeconds": 5.0,
+  "language": null,
+  "rawSegments": [
+    { "start": 0.0, "end": 5.0, "text": "you", "avgLogProb": -1.8, "noSpeechProb": 0.97 }
+  ],
+  "expectedText": "",
+  "maxWer": 0,
+  "expectLowConfidence": true,
+  "expectEmpty": true
+}

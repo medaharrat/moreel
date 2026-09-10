@@ -1,0 +1,54 @@
+{
+  "uid": "usage_overview",
+  "title": "Moreel — Usage",
+  "schemaVersion": 36,
+  "version": 2,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Requests/sec (all routes)",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "targets": [{ "expr": "sum(rate(requests_total[5m]))", "legendFormat": "requests/sec" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transcription success rate",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": { "defaults": { "unit": "percentunit", "max": 1, "min": 0 } },
+      "targets": [
+        {
+          "expr": "sum(rate(transcriptions_total{outcome=\"success\"}[5m])) / clamp_min(sum(rate(transcriptions_total[5m])), 1e-9)",
+          "legendFormat": "success_rate"
+        }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Minutes processed (24h)",
+      "gridPos": { "x": 0, "y": 8, "w": 8, "h": 6 },
+      "targets": [{ "expr": "sum(increase(minutes_processed_total[24h]))", "legendFormat": "minutes" }]
+    },
+    {
+      "type": "stat",
+      "title": "Transcriptions (24h)",
+      "gridPos": { "x": 8, "y": 8, "w": 8, "h": 6 },
+      "targets": [
+        { "expr": "sum(increase(transcriptions_total{outcome=~\"success|cache_hit\"}[24h]))", "legendFormat": "completed" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Cache hits (24h)",
+      "gridPos": { "x": 16, "y": 8, "w": 8, "h": 6 },
+      "targets": [{ "expr": "sum(increase(cache_hits_total[24h]))", "legendFormat": "hits" }]
+    },
+    {
+      "type": "timeseries",
+      "title": "Minutes processed over time",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 8 },
+      "targets": [{ "expr": "sum(rate(minutes_processed_total[1h])) * 3600", "legendFormat": "minutes/hr" }]
+    }
+  ],
+  "refresh": "30s",
+  "time": { "from": "now-24h", "to": "now" }
+}

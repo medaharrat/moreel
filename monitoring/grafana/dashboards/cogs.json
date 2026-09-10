@@ -1,0 +1,75 @@
+{
+  "uid": "cogs_overview",
+  "title": "Moreel — COGS",
+  "description": "Estimated transcription provider cost — see src/observability/cost-estimator.ts for the per-provider/model rate table this is derived from. Only priced provider/model pairs are counted; unpriced usage is absent, not zero.",
+  "schemaVersion": 36,
+  "version": 1,
+  "panels": [
+    {
+      "type": "stat",
+      "title": "Estimated cost (24h)",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "targets": [
+        { "expr": "sum(increase(transcription_cost_cents_total[24h])) / 100", "legendFormat": "cost" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Estimated cost (7d)",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "targets": [
+        { "expr": "sum(increase(transcription_cost_cents_total[7d])) / 100", "legendFormat": "cost" }
+      ]
+    },
+    {
+      "type": "stat",
+      "title": "Effective cost per minute processed (1h)",
+      "description": "Sanity check against the known provider rate in cost-calculator.ts — should track it closely; drift means either the rate table is stale or unpriced usage is skewing the ratio.",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 6 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSDcents" } },
+      "targets": [
+        {
+          "expr": "sum(rate(transcription_cost_cents_total[1h])) / clamp_min(sum(rate(minutes_processed_total[1h])), 1e-9)",
+          "legendFormat": "¢/min"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cost rate ($/hour) by provider · model",
+      "gridPos": { "x": 0, "y": 6, "w": 24, "h": 9 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "targets": [
+        {
+          "expr": "sum(rate(transcription_cost_cents_total[1h])) by (provider, model) * 3600 / 100",
+          "legendFormat": "{{provider}} · {{model}}"
+        }
+      ]
+    },
+    {
+      "type": "piechart",
+      "title": "Cost share by provider · model (7d)",
+      "gridPos": { "x": 0, "y": 15, "w": 12, "h": 9 },
+      "fieldConfig": { "defaults": { "unit": "currencyUSD" } },
+      "targets": [
+        {
+          "expr": "sum(increase(transcription_cost_cents_total[7d])) by (provider, model) / 100",
+          "legendFormat": "{{provider}} · {{model}}"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Minutes processed vs. cost accrued (24h cumulative)",
+      "gridPos": { "x": 12, "y": 15, "w": 12, "h": 9 },
+      "targets": [
+        { "expr": "sum(increase(minutes_processed_total[24h]))", "legendFormat": "minutes processed" },
+        { "expr": "sum(increase(transcription_cost_cents_total[24h])) / 100", "legendFormat": "cost ($)" }
+      ]
+    }
+  ],
+  "refresh": "1m",
+  "time": { "from": "now-7d", "to": "now" }
+}

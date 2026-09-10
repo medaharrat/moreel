@@ -1,0 +1,14 @@
+{
+  "id": "non-english-speech",
+  "description": "Spanish-language speech; verifies language detection and non-English transcript handling.",
+  "durationSeconds": 5.5,
+  "language": "es",
+  "rawSegments": [
+    { "start": 0.0, "end": 2.6, "text": "Hoy les voy a mostrar", "avgLogProb": -0.2, "noSpeechProb": 0.01 },
+    { "start": 2.6, "end": 5.5, "text": "mi receta favorita de mi abuela.", "avgLogProb": -0.18, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "Hoy les voy a mostrar mi receta favorita de mi abuela.",
+  "maxWer": 0.05,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}

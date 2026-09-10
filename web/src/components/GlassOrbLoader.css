@@ -1,0 +1,276 @@
+.glass-orb-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+}
+
+/* ---------- Orb ---------- */
+
+.glass-orb {
+  position: relative;
+  width: clamp(260px, 55vw, 480px);
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  isolation: isolate;
+  overflow: hidden;
+
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0.04) 55%, transparent 70%),
+    radial-gradient(circle at 70% 75%, rgba(120, 90, 200, 0.06), transparent 60%),
+    rgba(250, 250, 252, 0.35);
+
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  backdrop-filter: blur(3px) saturate(1.15);
+  -webkit-backdrop-filter: blur(3px) saturate(1.15);
+
+  box-shadow:
+    0 30px 70px -20px rgba(90, 70, 150, 0.22),
+    0 8px 24px -8px rgba(90, 70, 150, 0.12),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.25),
+    inset 0 30px 50px -20px rgba(255, 255, 255, 0.5),
+    inset 0 -30px 60px -25px rgba(120, 90, 200, 0.18);
+}
+
+/* ---------- Fluid layer ---------- */
+
+.orb-fluid {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  overflow: hidden;
+  filter: blur(clamp(20px, 6vw, 34px));
+  transform: translateZ(0); /* own compositing layer */
+}
+
+.blob {
+  position: absolute;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  will-change: transform, border-radius;
+}
+
+/* Colors lifted straight from the logo's own gradient stops (moreel-logo.svg):
+   deep purple -> magenta -> coral -> orange. */
+
+.blob-purple {
+  width: 62%;
+  height: 62%;
+  top: 6%;
+  left: 4%;
+  background: radial-gradient(circle at 40% 40%, #6a00de, rgba(106, 0, 222, 0) 70%);
+  border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+  animation: blob-move-1 calc(10s * var(--orb-speed, 1)) ease-in-out infinite;
+}
+
+.blob-magenta {
+  width: 55%;
+  height: 55%;
+  top: 30%;
+  left: 40%;
+  background: radial-gradient(circle at 45% 45%, #d5408b, rgba(213, 64, 139, 0) 72%);
+  border-radius: 60% 40% 35% 65% / 55% 65% 35% 45%;
+  animation: blob-move-2 calc(12s * var(--orb-speed, 1)) ease-in-out infinite;
+}
+
+.blob-coral {
+  width: 58%;
+  height: 58%;
+  top: 38%;
+  left: 6%;
+  background: radial-gradient(circle at 50% 50%, #ff5360, rgba(255, 83, 96, 0) 72%);
+  border-radius: 55% 45% 40% 60% / 40% 55% 45% 60%;
+  animation: blob-move-3 calc(8.5s * var(--orb-speed, 1)) ease-in-out infinite;
+}
+
+.blob-orange {
+  width: 50%;
+  height: 50%;
+  top: 8%;
+  left: 46%;
+  background: radial-gradient(circle at 50% 50%, #fe5d2e, rgba(254, 93, 46, 0) 72%);
+  border-radius: 48% 52% 60% 40% / 60% 45% 55% 40%;
+  animation: blob-move-4 calc(11s * var(--orb-speed, 1)) ease-in-out infinite;
+}
+
+.blob-violet {
+  width: 46%;
+  height: 46%;
+  top: 48%;
+  left: 28%;
+  background: radial-gradient(circle at 50% 50%, #9333ea, rgba(147, 51, 234, 0) 72%);
+  border-radius: 50% 50% 45% 55% / 50% 60% 40% 50%;
+  animation: blob-move-5 calc(9.5s * var(--orb-speed, 1)) ease-in-out infinite;
+}
+
+@keyframes blob-move-1 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+    opacity: 0.7;
+  }
+  33% {
+    transform: translate(6%, 8%) scale(1.12) rotate(35deg);
+    border-radius: 58% 42% 45% 55% / 60% 55% 45% 40%;
+    opacity: 0.85;
+  }
+  66% {
+    transform: translate(-5%, 4%) scale(0.92) rotate(-20deg);
+    border-radius: 65% 35% 55% 45% / 40% 60% 40% 60%;
+    opacity: 0.65;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 42% 58% 65% 35% / 45% 40% 60% 55%;
+    opacity: 0.7;
+  }
+}
+
+@keyframes blob-move-2 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 60% 40% 35% 65% / 55% 65% 35% 45%;
+    opacity: 0.75;
+  }
+  40% {
+    transform: translate(-8%, -6%) scale(0.88) rotate(-28deg);
+    border-radius: 40% 60% 55% 45% / 45% 35% 65% 55%;
+    opacity: 0.55;
+  }
+  75% {
+    transform: translate(5%, -4%) scale(1.15) rotate(18deg);
+    border-radius: 55% 45% 40% 60% / 60% 50% 50% 40%;
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 60% 40% 35% 65% / 55% 65% 35% 45%;
+    opacity: 0.75;
+  }
+}
+
+@keyframes blob-move-3 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 55% 45% 40% 60% / 40% 55% 45% 60%;
+    opacity: 0.7;
+  }
+  30% {
+    transform: translate(7%, -5%) scale(1.1) rotate(22deg);
+    border-radius: 40% 60% 55% 45% / 55% 40% 60% 45%;
+    opacity: 0.85;
+  }
+  70% {
+    transform: translate(-6%, 6%) scale(0.9) rotate(-30deg);
+    border-radius: 60% 40% 45% 55% / 45% 60% 35% 55%;
+    opacity: 0.6;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 55% 45% 40% 60% / 40% 55% 45% 60%;
+    opacity: 0.7;
+  }
+}
+
+@keyframes blob-move-4 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 48% 52% 60% 40% / 60% 45% 55% 40%;
+    opacity: 0.65;
+  }
+  45% {
+    transform: translate(-6%, 7%) scale(1.08) rotate(-24deg);
+    border-radius: 60% 40% 45% 55% / 45% 60% 40% 55%;
+    opacity: 0.8;
+  }
+  80% {
+    transform: translate(4%, -6%) scale(0.94) rotate(16deg);
+    border-radius: 40% 60% 55% 45% / 55% 45% 60% 40%;
+    opacity: 0.55;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 48% 52% 60% 40% / 60% 45% 55% 40%;
+    opacity: 0.65;
+  }
+}
+
+@keyframes blob-move-5 {
+  0% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 50% 50% 45% 55% / 50% 60% 40% 50%;
+    opacity: 0.6;
+  }
+  35% {
+    transform: translate(5%, 5%) scale(0.9) rotate(20deg);
+    border-radius: 45% 55% 50% 50% / 60% 45% 55% 40%;
+    opacity: 0.75;
+  }
+  72% {
+    transform: translate(-7%, -3%) scale(1.1) rotate(-26deg);
+    border-radius: 55% 45% 40% 60% / 40% 55% 45% 60%;
+    opacity: 0.5;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotate(0deg);
+    border-radius: 50% 50% 45% 55% / 50% 60% 40% 50%;
+    opacity: 0.6;
+  }
+}
+
+/* ---------- Glass depth layer ---------- */
+
+.orb-glass-layer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.4), transparent 38%),
+    radial-gradient(circle at 68% 78%, rgba(255, 255, 255, 0.1), transparent 46%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(255, 255, 255, 0.05) 78%, rgba(255, 255, 255, 0.16) 92%, transparent 100%);
+}
+
+.orb-specular {
+  position: absolute;
+  width: 16%;
+  height: 9%;
+  top: 13%;
+  left: 24%;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.7), transparent 72%);
+  filter: blur(4px);
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+/* ---------- Text ---------- */
+
+.loader-text {
+  margin: 0;
+  min-height: 1.4em;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: clamp(18px, 2.2vw, 23px);
+  font-weight: 500;
+  color: #1a1a1e;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.loader-text.is-visible {
+  opacity: 1;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .blob {
+    animation-play-state: paused;
+  }
+  .loader-text {
+    transition: opacity 0.15s linear;
+  }
+}

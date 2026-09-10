@@ -1,0 +1,14 @@
+{
+  "id": "noisy-environment",
+  "description": "Street-noise / crowd background with intelligible but lower-confidence speech throughout.",
+  "durationSeconds": 6.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 3.0, "text": "Can you hear me over all this traffic?", "avgLogProb": -1.1, "noSpeechProb": 0.15 },
+    { "start": 3.0, "end": 6.0, "text": "Anyway, we're live from downtown.", "avgLogProb": -0.8, "noSpeechProb": 0.12 }
+  ],
+  "expectedText": "Can you hear me over all this traffic? Anyway, we're live from downtown.",
+  "maxWer": 0.15,
+  "expectLowConfidence": true,
+  "expectEmpty": false
+}

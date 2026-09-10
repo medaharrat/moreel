@@ -1,0 +1,14 @@
+{
+  "id": "mixed-language",
+  "description": "Code-switching between English and Spanish within the same clip (common in bilingual creator content).",
+  "durationSeconds": 6.0,
+  "language": "en",
+  "rawSegments": [
+    { "start": 0.0, "end": 2.5, "text": "Okay so basically, mi mama siempre decia", "avgLogProb": -0.35, "noSpeechProb": 0.02 },
+    { "start": 2.5, "end": 6.0, "text": "that you should never go grocery shopping hungry.", "avgLogProb": -0.3, "noSpeechProb": 0.01 }
+  ],
+  "expectedText": "Okay so basically, mi mama siempre decia that you should never go grocery shopping hungry.",
+  "maxWer": 0.08,
+  "expectLowConfidence": false,
+  "expectEmpty": false
+}
